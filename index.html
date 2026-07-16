@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Smart Beat Pad</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%9B%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Smart Beat Pad</h1>
+  <div id="trackInfo">loading…</div>
+</header>
+
+<section id="controls">
+  <label>Pad size
+    <select id="granularity">
+      <option value="16">4 bars</option>
+      <option value="8">2 bars</option>
+      <option value="4" selected>1 bar</option>
+      <option value="2">1/2 bar</option>
+      <option value="1">1/4 bar (beat)</option>
+      <option value="0.5">1/8 bar</option>
+      <option value="0.25">1/16 bar</option>
+    </select>
+  </label>
+  <label>Quantize
+    <select id="quantize">
+      <option value="pad">= pad size</option>
+      <option value="16">4 bars</option>
+      <option value="8">2 bars</option>
+      <option value="4">1 bar</option>
+      <option value="2">1/2 bar</option>
+      <option value="1" selected>1/4 bar (beat)</option>
+      <option value="0.5">1/8 bar</option>
+      <option value="0.25">1/16 bar</option>
+      <option value="0">off</option>
+    </select>
+  </label>
+  <label>Mode
+    <select id="mode">
+      <option value="loop" selected>Loop</option>
+      <option value="oneshot">One-shot</option>
+      <option value="gate">Gate (hold)</option>
+    </select>
+  </label>
+  <label>BPM
+    <input id="bpm" type="number" min="40" max="240" step="0.01" value="130">
+  </label>
+  <span class="group" title="Shift the beat grid">
+    Grid
+    <button class="btn" id="offMinusBeat" title="shift −1 beat">«</button>
+    <button class="btn" id="offMinus" title="−10 ms">−</button>
+    <button class="btn" id="offPlus" title="+10 ms">+</button>
+    <button class="btn" id="offPlusBeat" title="shift +1 beat">»</button>
+  </span>
+  <label class="check"><input type="checkbox" id="hl" checked> Highlight in-key</label>
+  <button class="btn big" id="stop">■ Stop</button>
+  <button class="btn big rec" id="rec">● Rec</button>
+  <label class="btn big fileBtn">Load file<input type="file" id="file" accept="audio/*"></label>
+</section>
+
+<div id="waveWrap">
+  <canvas id="wave"></canvas>
+  <canvas id="playheadLayer"></canvas>
+</div>
+
+<div id="pager">
+  <button class="btn" id="prevPage">‹ Prev</button>
+  <span id="pageLabel"></span>
+  <button class="btn" id="nextPage">Next ›</button>
+</div>
+
+<div id="grid"></div>
+
+<section id="recordings" class="empty">
+  <h2>Recordings</h2>
+  <ul id="recList"></ul>
+</section>
+
+<footer>
+  Pads are colored by detected root key. When a pad is active, gold-ringed pads
+  are harmonically compatible (same key, relative major/minor, or a fifth
+  apart — Camelot neighbours). Keyboard: rows 1–0 / q–p / a–l / z–m trigger
+  pads, Space stops.
+</footer>
+
+<div id="overlay">
+  <div class="panel">
+    <div id="overlayMsg">Loading…</div>
+    <div id="overlayBar"><div id="overlayFill"></div></div>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
