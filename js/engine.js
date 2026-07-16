@@ -13,6 +13,8 @@ export class Engine extends EventTarget {
     this.bpm = 120;
     this.offset = 0;
     this.granularity = 4; // pad size in beats
+    this.stagger = 0; // shift pads off the downbeat, in beats
+    this.loopBeats = 'full'; // loop window: 'full' pad, or a length in beats
     this.quantize = 'pad'; // 'pad' | number of beats | 0 (off)
     this.mode = 'loop'; // 'loop' | 'oneshot' | 'gate'
     this.slices = [];
@@ -43,18 +45,42 @@ export class Engine extends EventTarget {
     this._reslice();
   }
 
+  setStagger(beats) {
+    this.stopAll(true);
+    this.stagger = beats;
+    this._reslice();
+  }
+
+  // Loop window length in beats ('full' = whole pad). Applies live to the
+  // pad that is currently looping.
+  setLoopBeats(v) {
+    this.loopBeats = v;
+    const c = this.current;
+    if (c && c.src.loop) {
+      c.loopDur = this._loopDur(c.slice);
+      c.src.loopEnd = c.slice.start + c.loopDur;
+    }
+  }
+
+  _loopDur(slice) {
+    if (this.loopBeats === 'full') return slice.dur;
+    return Math.min(slice.dur, this.loopBeats * this.spb);
+  }
+
   _reslice() {
     const dur = this.buffer.duration;
     const sliceLen = this.granularity * this.spb;
+    // Pads anchor on the downbeat grid; stagger intentionally shifts them.
+    const base = this.offset + this.stagger * this.spb;
     this.slices = [];
     let i = 0;
-    for (let t = this.offset; t + sliceLen * 0.5 <= dur; t += sliceLen, i++) {
+    for (let t = base; t + sliceLen * 0.5 <= dur; t += sliceLen, i++) {
       this.slices.push({
         index: i,
         start: t,
         dur: Math.min(sliceLen, dur - t),
-        startBeat: this.granularity * i,
-        endBeat: this.granularity * (i + 1),
+        startBeat: this.stagger + this.granularity * i,
+        endBeat: this.stagger + this.granularity * (i + 1),
       });
     }
     this.dispatchEvent(new CustomEvent('slices'));
@@ -122,19 +148,21 @@ export class Engine extends EventTarget {
     const gain = this.ctx.createGain();
     src.connect(gain);
     gain.connect(this.master);
+    let loopDur = slice.dur;
     if (this.mode === 'oneshot') {
       src.start(when, slice.start, slice.dur + 0.01);
       gain.gain.setValueAtTime(1, when);
       gain.gain.setValueAtTime(1, when + Math.max(0.005, slice.dur - 0.005));
       gain.gain.linearRampToValueAtTime(0, when + slice.dur + 0.005);
     } else {
+      loopDur = this._loopDur(slice);
       src.loop = true;
       src.loopStart = slice.start;
-      src.loopEnd = slice.start + slice.dur;
+      src.loopEnd = slice.start + loopDur;
       src.start(when, slice.start);
     }
     if (this.current) this._stopCurrent(when);
-    const cur = { index: p.index, src, gain, startTime: when, slice };
+    const cur = { index: p.index, src, gain, startTime: when, slice, loopDur };
     src.onended = () => {
       if (this.current === cur) {
         this.current = null;
@@ -170,7 +198,7 @@ export class Engine extends EventTarget {
     const now = this.ctx.currentTime;
     if (now < c.startTime) return c.slice.start;
     const el = now - c.startTime;
-    if (c.src.loop) return c.slice.start + (el % c.slice.dur);
+    if (c.src.loop) return c.slice.start + (el % (c.loopDur || c.slice.dur));
     return Math.min(c.slice.start + el, c.slice.start + c.slice.dur);
   }
 

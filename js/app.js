@@ -71,12 +71,16 @@ async function loadTrack(source, name) {
   const m = name.match(/(\d{2,3}(?:\.\d+)?)\s*bpm/i);
   state.bpm = m ? parseFloat(m[1]) : A.detectBPM(env, fr);
   state.offset = A.detectOffset(env, fr, state.bpm);
+  // Anchor the grid on the bar downbeat so pads clip on downbeats by default.
+  state.offset += A.detectDownbeatShift(env, fr, state.bpm, state.offset) * (60 / state.bpm);
   $('#bpm').value = state.bpm;
 
   if (!state.engine) {
     state.engine = new Engine(state.ctx, state.buffer);
     state.engine.addEventListener('pad', (e) => onPadState(e.detail));
     state.engine.granularity = parseFloat($('#granularity').value);
+    state.engine.stagger = parseFloat($('#stagger').value);
+    state.engine.loopBeats = parseLoop($('#loopLen').value);
     state.engine.quantize = parseQuantize($('#quantize').value);
     state.engine.mode = $('#mode').value;
     state.recorder = new Recorder(state.ctx, state.engine.master);
@@ -121,6 +125,7 @@ function computePadKeys() {
 // ---------- controls ----------
 
 function parseQuantize(v) { return v === 'pad' ? 'pad' : parseFloat(v); }
+function parseLoop(v) { return v === 'full' ? 'full' : parseFloat(v); }
 
 function wireControls() {
   $('#granularity').addEventListener('change', (e) => {
@@ -133,6 +138,17 @@ function wireControls() {
   });
   $('#quantize').addEventListener('change', (e) => {
     state.engine.quantize = parseQuantize(e.target.value);
+  });
+  $('#stagger').addEventListener('change', (e) => {
+    state.engine.setStagger(parseFloat(e.target.value));
+    state.refIndex = null;
+    computePadKeys();
+    state.page = Math.min(state.page, Math.max(0, pageCount() - 1));
+    renderPager();
+    renderPads();
+  });
+  $('#loopLen').addEventListener('change', (e) => {
+    state.engine.setLoopBeats(parseLoop(e.target.value));
   });
   $('#mode').addEventListener('change', (e) => {
     state.engine.mode = e.target.value;
@@ -241,8 +257,9 @@ function renderPads() {
     el.dataset.i = i;
     const bar = Math.floor(slice.startBeat / 4) + 1;
     const beat = Math.floor(slice.startBeat % 4) + 1;
+    const barOnly = gran >= 4 && state.engine.stagger === 0;
     el.innerHTML =
-      `<span class="pos">${gran >= 4 ? bar : `${bar}.${beat}`}</span>` +
+      `<span class="pos">${barOnly ? bar : `${bar}.${beat}`}</span>` +
       `<span class="key">${key ? key.name : '–'}</span>` +
       `<span class="cam">${key ? key.camelot : ''}</span>`;
     if (key) {
@@ -424,3 +441,4 @@ function esc(s) {
 }
 
 main();
+window.__beatpad = state; // debugging handle

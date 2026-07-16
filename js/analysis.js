@@ -65,6 +65,25 @@ export function detectOffset(env, fr, bpm) {
   return bestP / fr;
 }
 
+// Which of the 4 beats after `offset` is the bar downbeat: score each beat
+// phase by the onset energy landing on every 4th beat and pick the strongest.
+// Returns a shift in beats (0-3) to add to the offset so beat 0 is a downbeat.
+export function detectDownbeatShift(env, fr, bpm, offset) {
+  const beat = (fr * 60) / bpm;
+  const start = offset * fr;
+  let best = -1, bestK = 0;
+  for (let k = 0; k < 4; k++) {
+    let s = 0, n = 0;
+    for (let t = start + k * beat; t < env.length; t += 4 * beat) {
+      s += env[Math.round(t)] || 0;
+      n++;
+    }
+    if (n) s /= n;
+    if (s > best) { best = s; bestK = k; }
+  }
+  return bestK;
+}
+
 // One 12-bin chroma vector per beat of the track. Async (yields to the UI)
 // because a full track is a couple thousand FFTs.
 export async function computeBeatChromas(mono, sr, bpm, offset, onProgress) {

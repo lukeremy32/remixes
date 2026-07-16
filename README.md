@@ -28,6 +28,14 @@ the Pages URL on your phone.
   on the grid. Launch quantize is selectable (4 bars … 1/16 bar, or off).
 - **Smart granularity** — choose the pad size (4 bars, 2 bars, 1 bar, 1/2,
   1/4, 1/8, 1/16 bar) and the pad grid regenerates from the beat grid.
+- **Downbeat-aware chopping** — the bar downbeat is detected (strongest
+  onset phase across every 4th beat) and pads clip on downbeats by default.
+  The **Stagger** control intentionally shifts all pads off the bar
+  (+1/16 bar … +3 beats) for off-grid chops.
+- **Independent loop length** — the **Loop** control sets how much of a pad
+  repeats, regardless of pad size: a 4-bar pad can roll just its first bar,
+  beat, or 1/16. It applies live to the playing pad (beat-repeat style);
+  re-pressing the pad re-syncs it to the grid.
 - **Key detection per pad** — each pad's root key is estimated from a
   chromagram + Krumhansl-Schmuckler key profiles. Pads are colored by root
   key and labeled with the key name and Camelot code (e.g. `Am · 8A`).

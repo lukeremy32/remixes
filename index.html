@@ -26,6 +26,28 @@
       <option value="0.25">1/16 bar</option>
     </select>
   </label>
+  <label>Loop
+    <select id="loopLen">
+      <option value="full" selected>= full pad</option>
+      <option value="16">4 bars</option>
+      <option value="8">2 bars</option>
+      <option value="4">1 bar</option>
+      <option value="2">1/2 bar</option>
+      <option value="1">1/4 bar (beat)</option>
+      <option value="0.5">1/8 bar</option>
+      <option value="0.25">1/16 bar</option>
+    </select>
+  </label>
+  <label>Stagger
+    <select id="stagger">
+      <option value="0" selected>off (downbeats)</option>
+      <option value="0.25">+1/16 bar</option>
+      <option value="0.5">+1/8 bar</option>
+      <option value="1">+1 beat</option>
+      <option value="2">+2 beats</option>
+      <option value="3">+3 beats</option>
+    </select>
+  </label>
   <label>Quantize
     <select id="quantize">
       <option value="pad">= pad size</option>
@@ -83,8 +105,11 @@
 <footer>
   Pads are colored by detected root key. When a pad is active, gold-ringed pads
   are harmonically compatible (same key, relative major/minor, or a fifth
-  apart — Camelot neighbours). Keyboard: rows 1–0 / q–p / a–l / z–m trigger
-  pads, Space stops.
+  apart — Camelot neighbours). Pads clip on detected downbeats by default —
+  use Stagger to intentionally shift them off the bar. Loop sets how much of a
+  pad repeats (e.g. roll just the first beat of a 4-bar pad); it applies live,
+  and re-pressing the pad re-syncs it to the grid. Keyboard: rows
+  1–0 / q–p / a–l / z–m trigger pads, Space stops.
 </footer>
 
 <div id="overlay">
